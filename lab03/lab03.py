@@ -29,6 +29,12 @@ def ordered_digits(x):
 
     """
     "*** YOUR CODE HERE ***"
+    lastDigit = x % 10
+    while x > 0:
+        x //= 10
+        if lastDigit < x % 10:
+            return False
+    return True
 
 
 def get_k_run_starter(n, k):
@@ -52,12 +58,12 @@ def get_k_run_starter(n, k):
     """
     i = 0
     final = None
-    while ____________________________:
-        while ____________________________:
-            ____________________________
-        final = ____________________________
-        i = ____________________________
-        n = ____________________________
+    while i <= k:
+        while n % 10 > n // 10 % 10 and n // 10 > 0:
+            n //= 10
+        final = n % 10
+        i = i + 1
+        n = n // 10
     return final
 
 
@@ -78,16 +84,36 @@ def make_repeater(func, n):
     """
     "*** YOUR CODE HERE ***"
 
+    # def composer(x):
+    #     result = x
+    #     i = 0
+    #     while i < n:
+    #         result = func(result)
+    #         i += 1
+    #     return result
+    #
+    # return composer
+    g = identity
+    i = 0
+    while i < n:
+        # g = composer(func, g)
+        g = (lambda f, h: lambda x: f(h(x)))(func, g)
+        i = i + 1
+    return g
+
 
 def composer(func1, func2):
     """Return a function f, such that f(x) = func1(func2(x))."""
+
     def f(x):
         return func1(func2(x))
-    return f
+
+    # return f
+    return lambda x: func1(func2(x))
 
 
 def apply_twice(func):
-    """ Return a function that applies func twice.
+    """Return a function that applies func twice.
 
     func -- a function that takes one argument
 
@@ -95,6 +121,8 @@ def apply_twice(func):
     16
     """
     "*** YOUR CODE HERE ***"
+
+    return lambda x: func(func(x))
 
 
 def div_by_primes_under(n):
@@ -108,13 +136,23 @@ def div_by_primes_under(n):
     >>> div_by_primes_under(5)(1)
     False
     """
-    checker = lambda x: False
-    i = ____________________________
-    while ____________________________:
-        if not checker(i):
-            checker = ____________________________
-        i = ____________________________
-    return ____________________________
+    # checker = lambda x: status
+    # i = 2
+    # while i <= n:
+    #     if not checker(i):
+    #         checker = (lambda f, i: lambda x: f(x) or x % i == 0)(checker, i)
+    #     i = i + 1
+    # return checker
+    def checker(x):
+        status = False
+        i = 2
+        while i <= n:
+            if x % i == 0:
+                status = True
+            i += 1
+        return status
+
+    return checker
 
 
 def div_by_primes_under_no_lambda(n):
@@ -128,18 +166,23 @@ def div_by_primes_under_no_lambda(n):
     >>> div_by_primes_under_no_lambda(5)(1)
     False
     """
+
     def checker(x):
         return False
-    i = ____________________________
-    while ____________________________:
+
+    i = 2
+    while i <= n:
         if not checker(i):
-            def outer(____________________________):
-                def inner(____________________________):
-                    return ____________________________
-                return ____________________________
-            checker = ____________________________
-        i = ____________________________
-    return ____________________________
+
+            def outer(f, j):
+                def inner(x):
+                    return x % j == 0 or f(x)
+
+                return inner
+
+            checker = outer(checker, i)
+        i = i + 1
+    return checker
 
 
 def zero(f):
@@ -153,11 +196,17 @@ def successor(n):
 def one(f):
     """Church numeral 1: same as successor(zero)"""
     "*** YOUR CODE HERE ***"
+    return lambda x: f(x)
+
+
+# one(f) = successor(zero)(f)
+# one=successor(zero)
 
 
 def two(f):
     """Church numeral 2: same as successor(successor(zero))"""
     "*** YOUR CODE HERE ***"
+    return lambda x: f(f(x))
 
 
 three = successor(two)
@@ -176,6 +225,7 @@ def church_to_int(n):
     3
     """
     "*** YOUR CODE HERE ***"
+    return n(increment)(0)
 
 
 def add_church(m, n):
@@ -185,6 +235,11 @@ def add_church(m, n):
     5
     """
     "*** YOUR CODE HERE ***"
+    # return lambda h: lambda x: m(h)(x) + n(h)(x)
+    return lambda h: lambda x: m(h)(n(h)(x))
+
+
+# pass more early into the argument by using lambda x qiantao
 
 
 def mul_church(m, n):
@@ -197,6 +252,8 @@ def mul_church(m, n):
     12
     """
     "*** YOUR CODE HERE ***"
+    return lambda h: m(n(h))
+    # return lambda h: lambda x: m(h)(x) * n(h)(x)
 
 
 def pow_church(m, n):
@@ -208,3 +265,5 @@ def pow_church(m, n):
     9
     """
     "*** YOUR CODE HERE ***"
+    # return lambda h: lambda x: m(h)(x) ** n(h)(x)
+    return n(m)
