@@ -11,6 +11,19 @@ def merge(a, b):
     [2, 3, 5, 7, 8, 9, 11, 13, 14, 15]
     """
     "*** YOUR CODE HERE ***"
+    nexta = next(a)
+    nextb = next(b)
+    while True:
+        if nexta == nextb:
+            yield nexta
+            nexta = next(a)
+            nextb = next(b)
+        elif nexta < nextb:
+            yield nexta
+            nexta = next(a)
+        else:
+            yield nextb
+            nextb = next(b)
 
 
 def gen_perms(seq):
@@ -36,6 +49,12 @@ def gen_perms(seq):
     [['a', 'b'], ['b', 'a']]
     """
     "*** YOUR CODE HERE ***"
+    if len(seq) == 1:
+        yield list(seq)
+    else:
+        for i in range(len(seq)):
+            for ans in gen_perms(seq[:i] + seq[i + 1 :]):
+                yield [seq[i]] + ans
 
 
 def yield_paths(t, value):
@@ -73,8 +92,13 @@ def yield_paths(t, value):
     [[0, 2], [0, 2, 1, 2]]
     """
     "*** YOUR CODE HERE ***"
-    for _______________ in _________________:
-        for _______________ in _________________:
+    if label(t) == value:
+        yield [label(t)]
+        # With current label and without the preceding labels
+    for b in branches(t):
+        for ans in yield_paths(b, value):
+            yield [label(t)] + ans
+            # With current label and WITH the preceding labels
             "*** YOUR CODE HERE ***"
 
 
@@ -89,6 +113,13 @@ def hailstone(n):
     1
     """
     "*** YOUR CODE HERE ***"
+    yield n
+    if n == 1:
+        yield from hailstone(1)
+    elif n % 2 == 0:
+        yield from hailstone(n // 2)
+    else:
+        yield from hailstone(3 * n + 1)
 
 
 def remainders_generator(m):
@@ -124,13 +155,24 @@ def remainders_generator(m):
     """
     "*** YOUR CODE HERE ***"
 
+    def generator(remainder):
+        # i = iter(naturals())
+        # last = next(i)
+        for last in naturals():
+            if last % m == remainder:
+                yield last
+
+    for i in range(m):
+        yield generator(i)
+
 
 # Tree ADT
+
 
 def tree(label, branches=[]):
     """Construct a tree with the given label value and a list of branches."""
     for branch in branches:
-        assert is_tree(branch), 'branches must be trees'
+        assert is_tree(branch), "branches must be trees"
     return [label] + list(branches)
 
 
@@ -180,7 +222,7 @@ def print_tree(t, indent=0):
       6
         7
     """
-    print('  ' * indent + str(label(t)))
+    print("  " * indent + str(label(t)))
     for b in branches(t):
         print_tree(b, indent + 1)
 

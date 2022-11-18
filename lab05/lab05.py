@@ -29,6 +29,7 @@ def flatten(s):
         return flatten(s[0]) + flatten(s[1:])
     else:
         return s[:1] + flatten(s[1:])
+    
 
 
 from math import sqrt

@@ -30,14 +30,29 @@ def insert_items(lst, entry, elem):
     True
     """
     "*** YOUR CODE HERE ***"
-    count, i = 0, 0
-    length = len(lst)
-    while count < length:
-        if lst[i] == entry:
-            lst.insert(i + 1, elem)
-            i += 1
-        i += 1
-        count += 1
+
+    """one method is to track the original len of list
+        but there exists another implementation, which tracks the CONSTANTLY CHANGING len of list
+    """
+
+    """first method"""
+    # count, i = 0, 0
+    # length = len(lst)
+    # while count < length:
+    #     if lst[i] == entry:
+    #         lst.insert(i + 1, elem)
+    #         i += 1
+    #     i += 1
+    #     count += 1
+    # return lst
+
+    """next method"""
+    index = 0
+    while index < len(lst):
+        if lst[index] == entry:
+            lst.insert(index + 1, elem)
+            index += 1
+        index += 1
     return lst
 
 
