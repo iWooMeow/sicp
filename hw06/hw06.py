@@ -27,6 +27,7 @@ class Mint:
     >>> dime.worth()     # 20 cents + (155 - 50 years)
     125
     """
+
     present_year = 2022
 
     def __init__(self):
@@ -34,9 +35,11 @@ class Mint:
 
     def create(self, coin):
         "*** YOUR CODE HERE ***"
+        return coin(self.year)
 
     def update(self):
         "*** YOUR CODE HERE ***"
+        self.year = Mint.present_year
 
 
 class Coin:
@@ -47,6 +50,7 @@ class Coin:
 
     def worth(self):
         "*** YOUR CODE HERE ***"
+        return self.cents + max(Mint.present_year - self.year - 50, 0)
 
 
 class Nickel(Coin):
@@ -74,6 +78,26 @@ def store_digits(n):
     >>> link1 = Link(3, Link(Link(4), Link(5, Link(6))))
     """
     "*** YOUR CODE HERE ***"
+    """
+    #################################  REVERSED LINKED LIST ############################
+    # result = Link(None)
+    #
+    # def helper(n, ans, ptr):
+    #     if n == 0:
+    #         return ans.rest
+    #     else:
+    #         ptr.rest = Link(n % 10)
+    #         ptr = ptr.rest
+    #         return helper(n // 10, ans, ptr)
+    #
+    # return helper(n, result, result)
+
+"""
+    result = Link.empty
+    while n > 0:
+        result = Link(n % 10, result)
+        n //= 10
+    return result
 
 
 def deep_map_mut(func, lnk):
@@ -94,6 +118,12 @@ def deep_map_mut(func, lnk):
     <9 <16> 25 36>
     """
     "*** YOUR CODE HERE ***"
+    if isinstance(lnk, Link):
+        if isinstance(lnk.first, Link):
+            deep_map_mut(func, lnk.first)
+        else:
+            lnk.first = func(lnk.first)
+        deep_map_mut(func, lnk.rest)
 
 
 def two_list(vals, counts):
@@ -116,9 +146,41 @@ def two_list(vals, counts):
     Link(1, Link(1, Link(3, Link(3, Link(2)))))
     """
     "*** YOUR CODE HERE ***"
+    """******************************************  REVERSED METHOD ******************************************"""
+    # result = Link.empty
+    # for x, i in zip(reversed(vals), reversed(counts)):
+    #     for _ in range(i):
+    #         result = Link(x, result)
+    # return result
+    """*************RECURSION ********************************"""
+    length = len(vals)
+
+    def helper(index, count):
+        # if index < length:
+        if count > 0:
+            return Link(vals[index], helper(index, count - 1))
+        else:
+            if index < length - 1:
+                return helper(index + 1, counts[index + 1])
+            else:
+                """BASE CASE"""
+                return Link.empty
+
+    return helper(0, counts[0])
+    """*************ITERATION WITH POINTER********************************"""
+    # ans = Link(None)
+    # ptr = ans
+    #
+    # for index in range(len(vals)):
+    #     item = vals[index]
+    #     for _ in range(counts[index]):
+    #         ptr.rest = Link(item)
+    #         ptr = ptr.rest
+    #
+    # return ans.rest
 
 
-class VirFib():
+class VirFib:
     """A Virahanka Fibonacci number.
 
     >>> start = VirFib()
@@ -145,6 +207,11 @@ class VirFib():
 
     def next(self):
         "*** YOUR CODE HERE ***"
+        if self.value == 0:
+            self.prev = 1
+        newInstance = VirFib(self.value + self.prev)
+        newInstance.prev = self.value
+        return newInstance
 
     def __repr__(self):
         return "VirFib object, value " + str(self.value)
@@ -177,6 +244,46 @@ def is_bst(t):
     """
     "*** YOUR CODE HERE ***"
 
+    def bst_max(t):
+        if t.is_leaf():
+            return t.label
+        else:
+            return max([bst_max(b) for b in t.branches])
+
+    def bst_min(t):
+        if t.is_leaf():
+            return t.label
+        else:
+            return max([bst_min(b) for b in t.branches])
+
+    if t.is_leaf():
+        return True
+    elif len(t.branches) == 1:
+        label0 = t.branches[0].label
+        if label0 > t.label:
+            return is_bst(t.branches[0]) and bst_min(t.branches[0]) > t.label
+        else:
+            return is_bst(t.branches[0]) and bst_max(t.branches[0]) <= t.label
+    elif len(t.branches) == 2:
+        label1 = t.branches[0].label
+        label2 = t.branches[1].label
+        if label1 <= t.label < label2:
+            return (
+                bst_max(t.branches[0]) <= t.label
+                and bst_min(t.branches[1]) > t.label
+                and is_bst(t.branches[1])
+                and is_bst(t.branches[0])
+            )
+        # else:
+        #     return (
+        #         bst_max(t.branches[1]) <= t.label
+        #         and bst_min(t.branches[0]) > t.label
+        #         and is_bst(t.branches[1])
+        #         and is_bst(t.branches[0])
+        #     )
+
+    return False
+
 
 class Link:
     """A linked list.
@@ -198,6 +305,7 @@ class Link:
     >>> print(s)                             # Prints str(s)
     <5 7 <8 9>>
     """
+
     empty = ()
 
     def __init__(self, first, rest=empty):
@@ -207,17 +315,17 @@ class Link:
 
     def __repr__(self):
         if self.rest is not Link.empty:
-            rest_repr = ', ' + repr(self.rest)
+            rest_repr = ", " + repr(self.rest)
         else:
-            rest_repr = ''
-        return 'Link(' + repr(self.first) + rest_repr + ')'
+            rest_repr = ""
+        return "Link(" + repr(self.first) + rest_repr + ")"
 
     def __str__(self):
-        string = '<'
+        string = "<"
         while self.rest is not Link.empty:
-            string += str(self.first) + ' '
+            string += str(self.first) + " "
             self = self.rest
-        return string + str(self.first) + '>'
+        return string + str(self.first) + ">"
 
 
 class Tree:
@@ -242,15 +350,16 @@ class Tree:
 
     def __repr__(self):
         if self.branches:
-            branch_str = ', ' + repr(self.branches)
+            branch_str = ", " + repr(self.branches)
         else:
-            branch_str = ''
-        return 'Tree({0}{1})'.format(self.label, branch_str)
+            branch_str = ""
+        return "Tree({0}{1})".format(self.label, branch_str)
 
     def __str__(self):
         def print_tree(t, indent=0):
-            tree_str = '  ' * indent + str(t.label) + "\n"
+            tree_str = "  " * indent + str(t.label) + "\n"
             for b in t.branches:
                 tree_str += print_tree(b, indent + 1)
             return tree_str
+
         return print_tree(self).rstrip()

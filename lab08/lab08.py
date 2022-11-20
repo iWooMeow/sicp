@@ -9,6 +9,21 @@ def convert_link(link):
     """
     "*** YOUR CODE HERE ***"
 
+    "************ RECURSION NON-shallow****************"
+    if link is Link.empty:
+        return []
+    elif isinstance(link.first, Link):
+        return convert_link(link.first) + convert_link(link.rest)
+    else:
+        return [link.first] + convert_link(link.rest)
+
+    "************ ITERATION Shallow ****************"
+    # result = []
+    # while isinstance(link, Link):
+    #     result.append(link.first)
+    #     link = link.rest
+    # return result
+
 
 def duplicate_link(link, val):
     """Mutates `link` such that if there is a linked list
@@ -30,6 +45,17 @@ def duplicate_link(link, val):
     Link(1, Link(2, Link(2, Link(2, Link(2, Link(3))))))
     """
     "*** YOUR CODE HERE ***"
+    # if link.rest == Link.empty:
+    # if link.first == val:
+    # link.rest = Link(val)
+    # else:
+    if link == Link.empty:
+        return
+    elif link.first == val:
+        link.rest = Link(val, link.rest)
+        duplicate_link(link.rest.rest, val)
+    else:
+        duplicate_link(link.rest, val)
 
 
 def cumulative_mul(t):
@@ -46,6 +72,10 @@ def cumulative_mul(t):
     Tree(5040, [Tree(60, [Tree(3), Tree(4), Tree(5)]), Tree(42, [Tree(7)])])
     """
     "*** YOUR CODE HERE ***"
+    if not t.is_leaf():
+        for b in t.branches:
+            cumulative_mul(b)
+            t.label *= b.label
 
 
 def every_other(s):
@@ -66,6 +96,15 @@ def every_other(s):
     Link(4)
     """
     "*** YOUR CODE HERE ***"
+    """*** ITERATION ***"""
+    # while isinstance(s, Link):
+    #     if isinstance(s.rest, Link):
+    #         s.rest = s.rest.rest
+    #     s = s.rest
+    """RECURSION FUNCTION"""
+    if isinstance(s, Link) and isinstance(s.rest, Link):
+        s.rest = s.rest.rest
+        every_other(s.rest)
 
 
 def prune_small(t, n):
@@ -85,11 +124,11 @@ def prune_small(t, n):
     >>> t3
     Tree(6, [Tree(1), Tree(3, [Tree(1), Tree(2)])])
     """
-    while ___________________________:
-        largest = max(_______________, key=____________________)
-        _________________________
-    for __ in _____________:
-        ___________________
+    while len(t.branches) > n:
+        largest = max([b for b in t.branches], key=lambda x: x.label)
+        t.branches.remove(largest)
+    for b in t.branches:
+        prune_small(b, n)
 
 
 class Link:
@@ -112,6 +151,7 @@ class Link:
     >>> print(s)                             # Prints str(s)
     <5 7 <8 9>>
     """
+
     empty = ()
 
     def __init__(self, first, rest=empty):
@@ -121,17 +161,17 @@ class Link:
 
     def __repr__(self):
         if self.rest is not Link.empty:
-            rest_repr = ', ' + repr(self.rest)
+            rest_repr = ", " + repr(self.rest)
         else:
-            rest_repr = ''
-        return 'Link(' + repr(self.first) + rest_repr + ')'
+            rest_repr = ""
+        return "Link(" + repr(self.first) + rest_repr + ")"
 
     def __str__(self):
-        string = '<'
+        string = "<"
         while self.rest is not Link.empty:
-            string += str(self.first) + ' '
+            string += str(self.first) + " "
             self = self.rest
-        return string + str(self.first) + '>'
+        return string + str(self.first) + ">"
 
 
 class Tree:
@@ -156,15 +196,16 @@ class Tree:
 
     def __repr__(self):
         if self.branches:
-            branch_str = ', ' + repr(self.branches)
+            branch_str = ", " + repr(self.branches)
         else:
-            branch_str = ''
-        return 'Tree({0}{1})'.format(self.label, branch_str)
+            branch_str = ""
+        return "Tree({0}{1})".format(self.label, branch_str)
 
     def __str__(self):
         def print_tree(t, indent=0):
-            tree_str = '  ' * indent + str(t.label) + "\n"
+            tree_str = "  " * indent + str(t.label) + "\n"
             for b in t.branches:
                 tree_str += print_tree(b, indent + 1)
             return tree_str
+
         return print_tree(self).rstrip()
