@@ -8,9 +8,8 @@ def partitions(n, m):
     if n > 0 and m > 0:
         # With m
         if n == m:
-            yield str(
-                m
-            )  # for instance ,here str(m) is enough; The possibility of partition(n, m-1) is considered in the last line.
+            yield str(m)
+            # for instance ,here str(m) is enough; The possibility of partition(n, m-1) is considered in the last line.
         for ans in partitions(n - m, m):
             yield str(m) + "+" + ans
         # Without m
@@ -50,3 +49,12 @@ def partitionsNon(n, m):
 # 1.Functional Abstration: Calculate all the partitions of n with the max part m
 # 2.Arguments: n is the number to be partitioned, m is the maximum partition size
 # 3.Return value: a list of different partitions combinations delimited by '+'
+
+
+def count(n, m):
+    if n <= 0 or m <= 0:
+        return 0
+    elif n == m:
+        return 1 + count(n, m - 1)
+    else:
+        return count(n, m - 1) + count(n - m, m)

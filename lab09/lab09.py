@@ -8,6 +8,7 @@ def insert_into_all(item, nested_list):
     [[0], [0, 1, 2], [0, 3]]
     """
     "*** YOUR CODE HERE ***"
+    return [[item] + l for l in nested_list]
 
 
 def subseqs(s):
@@ -20,11 +21,11 @@ def subseqs(s):
     >>> subseqs([])
     [[]]
     """
-    if ________________:
-        ________________
+    if not s:
+        return [[]]
     else:
-        ________________
-        ________________
+        item = s[0]
+        return insert_into_all(item, subseqs(s[1:])) + subseqs(s[1:])
 
 
 def non_decrease_subseqs(s):
@@ -41,16 +42,25 @@ def non_decrease_subseqs(s):
     >>> sorted(seqs2)
     [[], [1], [1], [1, 1], [1, 1, 2], [1, 2], [1, 2], [2]]
     """
+
     def subseq_helper(s, prev):
         if not s:
-            return ____________________
+            return [[]]
         elif s[0] < prev:
-            return ____________________
+            return subseq_helper(s[1:], prev)
+            ############### non-decrease Subseq of s[1:]
         else:
-            a = ______________________
-            b = ______________________
-            return insert_into_all(________, ______________) + ________________
-    return subseq_helper(____, ____)
+            a = subseq_helper(s[1:], s[0])
+            b = subseq_helper(s[1:], prev)
+            return insert_into_all(s[0], a) + b
+            ################## non-decrease Subseq of s start at s[0] whose first element >= prev and non-decrease Subseq of s[1:]
+
+    return subseq_helper(s, 0)
+
+
+##1.input a list and a prev num output a non_decrease_subseqs list in which all subseqs' first elements >= prev
+##2.input type: list of num, num
+##3.output type: list of list
 
 
 def num_trees(n):
@@ -74,6 +84,10 @@ def num_trees(n):
 
     """
     "*** YOUR CODE HERE ***"
+    if n == 1:
+        return 1
+    else:
+        return sum([num_trees(i) * num_trees(n - i) for i in range(1, n)])
 
 
 def partition_gen(n):
@@ -86,13 +100,15 @@ def partition_gen(n):
     [2, 1, 1]
     [1, 1, 1, 1]
     """
+
     def yield_helper(j, k):
         if j == 0:
-            ____________________________________________
-        elif ____________________________________________:
-            for small_part in ________________________________:
-                yield ____________________________________________
-            yield ________________________________________
+            yield []
+        elif j > 0 and k > 0:
+            for small_part in yield_helper(j - k, k):
+                yield [k] + small_part
+            yield from yield_helper(j, k - 1)
+
     yield from yield_helper(n, n)
 
 
@@ -133,7 +149,42 @@ class VendingMachine:
     >>> w.vend()
     'Here is your soda.'
     """
+
     "*** YOUR CODE HERE ***"
+
+    def __init__(self, output, price):
+        self.output = output
+        self.price = price
+        self.stock = 0
+        self.fund = 0
+
+    def vend(self):
+        if self.stock == 0:
+            return "Nothing left to vend. Please restock."
+        if self.fund == self.price:
+            self.fund = 0
+            self.stock -= 1
+            return f"Here is your {self.output}."
+        elif self.fund > self.price:
+            tmp = self.fund - self.price
+            self.fund = 0
+            self.stock -= 1
+            return f"Here is your {self.output} and ${tmp} change."
+        else:
+            return (
+                f"Please update your balance with ${self.price - self.fund} more funds."
+            )
+
+    def restock(self, amount):
+        self.stock += amount
+        return f"Current {self.output} stock: {self.stock}"
+
+    def add_funds(self, amount):
+        if self.stock == 0:
+            return f"Nothing left to vend. Please restock. Here is your ${amount}."
+        else:
+            self.fund += amount
+            return f"Current balance: ${self.fund}"
 
 
 def trade(first, second):
@@ -173,24 +224,25 @@ def trade(first, second):
     """
     m, n = 1, 1
 
-    equal_prefix = lambda: ______________________
-    while _______________________________:
-        if __________________:
+    equal_prefix = lambda: sum(first[:m]) == sum(second[:n])
+    while m <= len(first) and n <= len(second) and not equal_prefix():
+        print("DEBUG:", "loop")
+        if sum(first[:m]) < sum(second[:n]):
             m += 1
         else:
             n += 1
 
     if equal_prefix():
         first[:m], second[:n] = second[:n], first[:m]
-        return 'Deal!'
+        return "Deal!"
     else:
-        return 'No deal!'
+        return "No deal!"
 
 
 def card(n):
     """Return the playing card numeral as a string for a positive n <= 13."""
     assert type(n) == int and n > 0 and n <= 13, "Bad card n"
-    specials = {1: 'A', 11: 'J', 12: 'Q', 13: 'K'}
+    specials = {1: "A", 11: "J", 12: "Q", 13: "K"}
     return specials.get(n, str(n))
 
 
@@ -212,12 +264,12 @@ def shuffle(cards):
     >>> cards[:12]  # Should not be changed
     ['AH', 'AD', 'AS', 'AC', '2H', '2D', '2S', '2C', '3H', '3D', '3S', '3C']
     """
-    assert len(cards) % 2 == 0, 'len(cards) must be even'
-    half = _______________
+    assert len(cards) % 2 == 0, "len(cards) must be even"
+    half = len(cards) // 2
     shuffled = []
-    for i in _____________:
-        _________________
-        _________________
+    for i in range(half):
+        shuffled.append(cards[i])
+        shuffled.append(cards[i + half])
     return shuffled
 
 
@@ -236,12 +288,27 @@ def insert(link, value, index):
     >>> insert(link, 100, 2)
     >>> print(link)
     <9001 1 100 2 3>
-    >>> insert(link, 4, 5)
+    >>> insert(link, 4, 8)
     Traceback (most recent call last):
         ...
     IndexError: Out of bounds!
     """
     "*** YOUR CODE HERE ***"
+    for _ in range(index):
+        if link == Link.empty:
+            raise IndexError("Out of bounds!")
+        else:
+            link = link.rest
+    if link == Link.empty:
+        raise IndexError("Out of bounds!")
+    link.first, link.rest = value, Link(link.first, link.rest)
+
+    # if index == 0 and isinstance(link, Link):
+    #     link.first, link.rest = value, Link(link.first, link.rest)
+    # elif index > 0 and isinstance(link, Link):
+    #     insert(link.rest, value, index - 1)
+    # else:
+    #     raise IndexError("Out of bounds!")
 
 
 def deep_len(lnk):
@@ -258,16 +325,22 @@ def deep_len(lnk):
     >>> deep_len(levels)
     5
     """
-    if ______________:
+    # if lnk is Link.empty:
+    #     return 0
+    # elif isinstance(lnk.first, int):
+    #     return 1 + deep_len(lnk.rest)
+    # else:
+    #     return deep_len(lnk.rest) + deep_len(lnk.first)
+    if lnk is Link.empty:
         return 0
-    elif ______________:
+    elif not isinstance(lnk, Link):
         return 1
     else:
-        return _________________________
+        return deep_len(lnk.first) + deep_len(lnk.rest)
 
 
 def make_to_string(front, mid, back, empty_repr):
-    """ Returns a function that turns linked lists to strings.
+    """Returns a function that turns linked lists to strings.
 
     >>> kevins_to_string = make_to_string("[", "|-]-->", "", "[]")
     >>> jerrys_to_string = make_to_string("(", " . ", ")", "()")
@@ -281,11 +354,13 @@ def make_to_string(front, mid, back, empty_repr):
     >>> jerrys_to_string(Link.empty)
     '()'
     """
+
     def printer(lnk):
-        if ______________:
-            return _________________________
+        if lnk is Link.empty:
+            return empty_repr
         else:
-            return _________________________
+            return front + str(lnk.first) + mid + printer(lnk.rest) + back
+
     return printer
 
 
@@ -340,6 +415,16 @@ def long_paths(t, n):
     [[0, 11, 12, 13, 14]]
     """
     "*** YOUR CODE HERE ***"
+    if t.is_leaf() and n > 0:
+        return []
+    elif t.is_leaf() and n <= 0:
+        return [[t.label]]
+    else:
+        result = []
+        for b in t.branches:
+            for ans in long_paths(b, n - 1):
+                result += [[t.label] + ans]
+        return result
 
 
 def reverse_other(t):
@@ -356,6 +441,21 @@ def reverse_other(t):
     Tree(1, [Tree(8, [Tree(3, [Tree(5), Tree(4)]), Tree(6, [Tree(7)])]), Tree(2)])
     """
     "*** YOUR CODE HERE ***"
+
+    def helper(depth, t):
+        if depth % 2 == 1:
+            for b in t.branches:
+                helper(depth + 1, b)
+        else:
+            for i in range(len(t.branches) // 2):
+                t.branches[i].label, t.branches[-1 - i].label = (
+                    t.branches[-1 - i].label,
+                    t.branches[i].label,
+                )
+                for b in t.branches:
+                    helper(depth + 1, b)
+
+    return helper(0, t)
 
 
 class Link:
@@ -378,6 +478,7 @@ class Link:
     >>> print(s)                             # Prints str(s)
     <5 7 <8 9>>
     """
+
     empty = ()
 
     def __init__(self, first, rest=empty):
@@ -387,17 +488,17 @@ class Link:
 
     def __repr__(self):
         if self.rest is not Link.empty:
-            rest_repr = ', ' + repr(self.rest)
+            rest_repr = ", " + repr(self.rest)
         else:
-            rest_repr = ''
-        return 'Link(' + repr(self.first) + rest_repr + ')'
+            rest_repr = ""
+        return "Link(" + repr(self.first) + rest_repr + ")"
 
     def __str__(self):
-        string = '<'
+        string = "<"
         while self.rest is not Link.empty:
-            string += str(self.first) + ' '
+            string += str(self.first) + " "
             self = self.rest
-        return string + str(self.first) + '>'
+        return string + str(self.first) + ">"
 
 
 class Tree:
@@ -422,15 +523,16 @@ class Tree:
 
     def __repr__(self):
         if self.branches:
-            branch_str = ', ' + repr(self.branches)
+            branch_str = ", " + repr(self.branches)
         else:
-            branch_str = ''
-        return 'Tree({0}{1})'.format(self.label, branch_str)
+            branch_str = ""
+        return "Tree({0}{1})".format(self.label, branch_str)
 
     def __str__(self):
         def print_tree(t, indent=0):
-            tree_str = '  ' * indent + str(t.label) + "\n"
+            tree_str = "  " * indent + str(t.label) + "\n"
             for b in t.branches:
                 tree_str += print_tree(b, indent + 1)
             return tree_str
+
         return print_tree(self).rstrip()
