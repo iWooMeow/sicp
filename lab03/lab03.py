@@ -185,6 +185,11 @@ def div_by_primes_under_no_lambda(n):
     return checker
 
 
+# church num is hof, successor is hof passing hof
+# Number: fn:takes fn returns fn(call fn n times)
+# Manipulation: fn :takes Number returns Number
+
+
 def zero(f):
     return lambda x: x
 

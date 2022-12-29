@@ -52,9 +52,33 @@ def partitionsNon(n, m):
 
 
 def count(n, m):
-    if n <= 0 or m <= 0:
+    if n < 0 or m <= 0:
         return 0
-    elif n == m:
-        return 1 + count(n, m - 1)
+    elif n == 0:
+        return 1
     else:
-        return count(n, m - 1) + count(n - m, m)
+        ans = 0
+        for i in reversed(range(1, m + 1)):
+            ans += count(n - i, i)
+        # if n == m:
+        #     return 1 + ans
+        # else:
+        return ans
+
+
+def enumArgs(args, cnt, start, end):
+    if cnt == -1:
+        print(args)
+    else:
+        for i in range(start, end):
+            args[cnt] = i
+            enumArgs(args, cnt - 1, i + 1, end)
+
+
+# enum = lambda args, end: enumArgs(args, 0, 0, end)
+def enum(end, K):
+    args = [0 for _ in range(K)]
+    enumArgs(args, K - 1, 0, end)
+
+
+enum(7, 3)
