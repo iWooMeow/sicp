@@ -44,9 +44,9 @@ def do_and_if(args, env):
         value1 = args.rest.first
         value2 = args.rest.rest.first
         if is_scheme_true(scheme_eval(predecate, env)):
-            return scheme_eval(value1, env)
+            return scheme_eval(value1, env, True)
         else:
-            return scheme_eval(value2, env)
+            return scheme_eval(value2, env, True)
 
 
 def do_and_quote(args, env):
@@ -71,14 +71,6 @@ def do_and_mu(args, env):
 
 
 def do_and_begin(args, env):
-    # if len(args) < 1:
-    #     raise SchemeError("wrong number of arguments")
-    # length = len(args)
-    # for i in range(length):
-    #     if i == length - 1:
-    #         return scheme_eval(args.first, env)
-    #     scheme_eval(args.first, env)
-    #     args = args.rest
     return eval_all(args, env)
 
 
@@ -86,28 +78,24 @@ def do_and(args, env):
     length = len(args)
     if length == 0:
         return True
-    for i in range(length):
+    for i in range(length - 1):
         value = scheme_eval(args.first, env)
         if is_scheme_false(value):
             return value
-        else:
-            if i == length - 1:
-                return value
         args = args.rest
+    return scheme_eval(args.first, env, True)
 
 
 def do_or(args, env):
     length = len(args)
     if length == 0:
         return False
-    for i in range(length):
+    for i in range(length - 1):
         value = scheme_eval(args.first, env)
         if is_scheme_true(value):
             return value
-        else:
-            if i == length - 1:
-                return value
         args = args.rest
+    return scheme_eval(args.first, env, True)
 
 
 def do_cond(args, env):
@@ -125,7 +113,7 @@ def do_cond(args, env):
             if scheme_nullp(ptr.rest):
                 return True
             else:
-                return scheme_eval(ptr.rest.first, env)
+                return eval_all(ptr.rest, env)
 
         pred = scheme_eval(ptr.first, env)
         if is_scheme_true(pred):

@@ -7,6 +7,7 @@ from ucb import main, trace
 
 import scheme_forms
 
+
 ##############
 # Eval/Apply #
 ##############
@@ -33,7 +34,11 @@ def scheme_eval(expr, env, tail=False):  # Optional third argument is ignored
         if scheme_symbolp(expr.first) and expr.first in scheme_forms.SPECIAL_FORMS:
             return scheme_forms.SPECIAL_FORMS[expr.first](expr.rest, env)
         else:
-            return scheme_apply(scheme_eval(expr.first, env), expr.rest, env)
+            return scheme_apply(
+                scheme_eval(expr.first, env),
+                expr.rest.map(lambda x: scheme_eval(x, env)),
+                env,
+            )
 
     # error
     else:
@@ -52,15 +57,18 @@ def scheme_apply(procedure, args, env):
         raise SchemeError(f"{procedure} is not a procedure")
 
     if isinstance(procedure, BuiltinProcedure):
-        argslist = ()
-        for i in range(len(args)):
-            argslist += (scheme_eval(args.first, env),)
-            args = args.rest
+        argsPair = args
+        argslist = []
+        length = len(args)
+        for _ in range(length):
+            argslist.append(argsPair.first)
+            argsPair = argsPair.rest
         try:
             if procedure.need_env == False:
                 return procedure.py_func(*argslist)
             else:
-                return procedure.py_func(*argslist, env)
+                argslist.append(env)
+                return procedure.py_func(*argslist)
         except TypeError as err:
             raise SchemeError(f"incorrect number of arguments{len(args)}")
 
@@ -70,23 +78,10 @@ def scheme_apply(procedure, args, env):
         formals = procedure.formals
         newenv = Frame(procedure.env)
         for i in range(len(procedure.formals)):
-            newenv.define(formals.first, scheme_eval(args.first, env))
+            newenv.define(formals.first, args.first)
             formals = formals.rest
             args = args.rest
         expr = procedure.body
-        # for i in range(len(procedure.body)):
-        #     if i == len(procedure.body) - 1:
-        #         # print("DEBUG:", expr.first.first)
-        #         # print("DEBUG:", procedure.name)
-        #         # try:
-        #         #     tmp = scheme_eval(expr.first.first, env)
-        #         # except SchemeError as err:
-        #         #     tmp = nil
-        #         # if scheme_listp(expr.first) and tmp == procedure:
-        #         #     return scheme_eval(expr.first, newenv, True)
-        #         return scheme_eval(expr.first, newenv)
-        #     scheme_eval(expr.first, newenv)
-        #     expr = expr.rest
         return eval_all(expr, newenv)
 
     elif isinstance(procedure, MuProcedure):
@@ -98,18 +93,11 @@ def scheme_apply(procedure, args, env):
 
         newenv = Frame(env)
         for i in range(len(procedure.formals)):
-            newenv.define(formals.first, scheme_eval(args.first, env))
+            newenv.define(formals.first, args.first)
             formals = formals.rest
             args = args.rest
 
         expr = procedure.body
-        # for i in range(len(procedure.body)):
-        #     if i == len(procedure.body) - 1:
-        #         if scheme_listp(expr.first) and expr.first.first == procedure:
-        #             return scheme_eval(expr.first, newenv, True)
-        #         return scheme_eval(expr.first, newenv)
-        #     scheme_eval(expr.first, newenv)
-        #     expr = expr.rest
         return eval_all(expr, newenv)
 
     else:
@@ -124,7 +112,7 @@ def eval_all(expr, env):
     length = len(expr)
     for i in range(length):
         if i == length - 1:
-            return scheme_eval(expr.first, env)
+            return scheme_eval(expr.first, env, True)
         scheme_eval(expr.first, env)
         expr = expr.rest
 
@@ -146,7 +134,7 @@ def optimize_tail_call(unoptimized_eval):
 
         result = Unevaluated(expr, env)
         while isinstance(result, Unevaluated):
-            result = unoptimized_eval(expr, env)
+            result = unoptimized_eval(result.expr, result.env)
         return result
 
     return optimized_eval
@@ -170,5 +158,8 @@ def complete_apply(procedure, args, env):
     if you attempt the extra credit."""
     validate_procedure(procedure)
     # BEGIN
-    return val
+    result = scheme_apply(procedure, args, env)
+    while isinstance(result, Unevaluated):
+        result = scheme_eval(result.expr, result.env)
+    return result
     # END
