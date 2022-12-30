@@ -16,6 +16,22 @@ logic for each special form separately somehow, which you can do here.
 "*** YOUR CODE HERE ***"
 
 
+def define_macro(args, env):
+    if len(args) < 2:
+        raise SchemeError("define expression is not well-formed")
+    else:
+        first = args.first
+        if not scheme_listp(first):
+            raise SchemeError(f"{first} is not a symbol")
+
+        symbol = first.first
+        if not scheme_symbolp(symbol):
+            raise SchemeError(f"{first} is not a symbol")
+        validate_formals(first.rest)
+        env.define(symbol, MacroProcedure(first.rest, args.rest, env))
+        return symbol
+
+
 def do_and_define(args, env):
     if len(args) < 2:
         raise SchemeError("define expression is not well-formed")
@@ -158,5 +174,6 @@ SPECIAL_FORMS = {
     "cond": do_cond,
     "mu": do_and_mu,
     "let": do_and_let,
+    "define-macro": define_macro,
 }
 # END PROBLEM 1/2/3

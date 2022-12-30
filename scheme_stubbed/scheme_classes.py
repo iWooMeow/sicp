@@ -127,3 +127,18 @@ class MuProcedure(Procedure):
         return "MuProcedure({0}, {1})".format(repr(self.formals), repr(self.body))
 
 
+class MacroProcedure(Procedure):
+    name = "[macro]"  # Error tracing extension
+
+    def __init__(self, formals, body, env):
+        """A procedure with formal parameter list FORMALS (a Scheme list) and
+        Scheme list BODY as its definition."""
+        self.formals = formals
+        self.body = body
+        self.env = env
+
+    def __str__(self):
+        return str(Pair("Macro", Pair(self.formals, self.body)))
+
+    def __repr__(self):
+        return "MacroProcedure({0}, {1})".format(repr(self.formals), repr(self.body))

@@ -11,8 +11,6 @@ import scheme_forms
 ##############
 # Eval/Apply #
 ##############
-
-
 def scheme_eval(expr, env, tail=False):  # Optional third argument is ignored
     """Evaluate Scheme expression EXPR in Frame ENV.
 
@@ -29,20 +27,32 @@ def scheme_eval(expr, env, tail=False):  # Optional third argument is ignored
         return env.lookup(expr)
     elif self_evaluating(expr):
         return expr
-    # non-atomic
-    elif scheme_listp(expr):
-        if scheme_symbolp(expr.first) and expr.first in scheme_forms.SPECIAL_FORMS:
-            return scheme_forms.SPECIAL_FORMS[expr.first](expr.rest, env)
-        else:
-            return scheme_apply(
-                scheme_eval(expr.first, env),
-                expr.rest.map(lambda x: scheme_eval(x, env)),
-                env,
-            )
 
-    # error
-    else:
+    # non-atomic
+    if not scheme_listp(expr):
         raise SchemeError("input is not well-formed")
+
+    if tail:  ######## handle (1) Tail eval (2) Call eval
+        return Unevaluated(expr, env)
+    else:  ######## handle (1) non-tail eval (2) Call eval and SPECIAL_FORMS
+        result = Unevaluated(expr, env)
+        ########### """Act as the important initial value for the while loop, the abstraction of scheme_eval determines that the fn can return Unevaluated object but can't parse the Unevaluated object"""
+        while isinstance(result, Unevaluated):
+            expr, env = result.expr, result.env
+            if scheme_symbolp(expr.first) and expr.first in scheme_forms.SPECIAL_FORMS:
+                result = scheme_forms.SPECIAL_FORMS[expr.first](expr.rest, env)
+
+            else:
+                procedure = scheme_eval(expr.first, env)
+                if isinstance(procedure, MacroProcedure):
+                    result = complete_apply(procedure, expr.rest, env)
+                    result = scheme_eval(result, env)
+                else:
+                    result = scheme_apply(
+                        procedure, expr.rest.map(lambda x: scheme_eval(x, env)), env
+                    )
+
+        return result
     # END Problem 1/2
 
 
@@ -73,6 +83,18 @@ def scheme_apply(procedure, args, env):
             raise SchemeError(f"incorrect number of arguments{len(args)}")
 
     elif isinstance(procedure, LambdaProcedure):
+        if len(args) != len(procedure.formals):
+            raise SchemeError(f"incorrect number of arguments")
+        formals = procedure.formals
+        newenv = Frame(procedure.env)
+        for i in range(len(procedure.formals)):
+            newenv.define(formals.first, args.first)
+            formals = formals.rest
+            args = args.rest
+        expr = procedure.body
+        return eval_all(expr, newenv)
+
+    elif isinstance(procedure, MacroProcedure):
         if len(args) != len(procedure.formals):
             raise SchemeError(f"incorrect number of arguments")
         formals = procedure.formals
@@ -140,7 +162,7 @@ def optimize_tail_call(unoptimized_eval):
     return optimized_eval
 
 
-scheme_eval = optimize_tail_call(scheme_eval)
+# scheme_eval = optimize_tail_call(scheme_eval)
 
 
 class Unevaluated:
